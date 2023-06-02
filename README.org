@@ -18,16 +18,14 @@ brew install emacs-plus
 ln -s /usr/local/opt/emacs-plus/Emacs.app /Applications/Emacs.app
 #+end_src
 
-* Install Doom Emacs
+* Install [[https://github.com/doomemacs/doomemacs/tree/master][Doom Emacs]]
 First, clone Doom Emacs to =~/.emacs.d/=:
 #+BEGIN_SRC bash
-git clone https://github.com/hlissner/doom-emacs ~/.emacs.d
+git clone https://github.com/doomemacs/doomemacs ~/.emacs.d
 #+END_SRC
 
 #+begin_quote
 I recommend you add =~/.emacs.d/bin= to your ~PATH~ so you can call =doom= directly and from anywhere.
-Accomplish this by adding this to your =.bashrc= or =.zshrc= file:
-export PATH="$HOME/.emacs.d/bin:$PATH"
 #+end_quote
 
 Then clone =.doom.d= to =~/.doom.d/=
