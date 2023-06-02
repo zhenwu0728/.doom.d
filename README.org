@@ -1,7 +1,6 @@
 #+title: Getting Started Guide
-* Install Emacs
-** On macOS
-*** With Homebrew
+* Install Emacs on macOS
+** With Homebrew
 First, install Doom's dependencies.
 #+BEGIN_SRC bash
 # required dependencies
@@ -26,7 +25,9 @@ git clone https://github.com/hlissner/doom-emacs ~/.emacs.d
 #+END_SRC
 
 #+begin_quote
-I recommend you add =~/.emacs.d/bin= to your ~PATH~ so you can call =doom= directly and from anywhere. Accomplish this by adding this to your .bashrc or .zshrc file: ~export PATH="$HOME/.emacs.d/bin:$PATH"~
+I recommend you add =~/.emacs.d/bin= to your ~PATH~ so you can call =doom= directly and from anywhere.
+Accomplish this by adding this to your =.bashrc= or =.zshrc= file:
+export PATH="$HOME/.emacs.d/bin:$PATH"
 #+end_quote
 
 Then clone =.doom.d= to =~/.doom.d/=
@@ -36,7 +37,10 @@ git clone https://github.com/zhenwu0728/.doom.d.git ~/.doom.d/
 
 Finally, initiate Doom Emacs.
 #+begin_src bash
-# If you know Emacs won't be launched from your shell environment (e.g. you're on macOS or use an app launcher that doesn't launch programs with the correct shell) then create an envvar file to ensure Doom correctly inherits your shell environment.
+# If you know Emacs won't be launched from your shell environment
+# (e.g. you're on macOS or use an app launcher that doesn't launch
+# programs with the correct shell) then create an envvar file to
+# ensure Doom correctly inherits your shell environment.
 doom env
 
 # Then synchronize Doom with your config:
