@@ -8,14 +8,40 @@ style, using a plain text format closely related to Emacs called
 called [[https://github.com/doomemacs/][Doom Emacs]], hence the name of this document.
 
 * Before using this configuration
-This configuration is continuously being improved. I build my own
-Emacs from source in order to take advantage of some experimental
-features. There are also =(packages! ...)=  calls to external Emacs
-packages in =packages.el= that are not pinned to any specific version.
+This configuration is continuously being improved.
+There are also =(packages! ...)=  calls to external Emacs packages
+in =packages.el= that are not pinned to any specific version.
 As such, there might be incompatibilities if one blindly copies codes
 from this configuration.
 
 Currently, I use [[https://github.com/d12frosted/homebrew-emacs-plus][emacs-plus]] =--with-native-compilation=.
+And I suggest install =Doom Emacs= manually as below.
+
+First, clone Doom Emacs to =~/.emacs.d/=:
+#+BEGIN_SRC bash :tangle no :eval no
+git clone https://github.com/doomemacs/doomemacs ~/.emacs.d
+#+END_SRC
+
+#+begin_quote
+I recommend you add =~/.emacs.d/bin= to your ~PATH~ so you can call =doom= directly and from anywhere.
+#+end_quote
+
+Then clone this repo to =~/.doom.d/=
+#+begin_src bash :tangle no :eval no
+git clone https://github.com/zhenwu0728/.doom.d.git ~/.doom.d/
+#+end_src
+
+Finally, initiate Doom Emacs.
+#+begin_src bash :tangle no :eval no
+# If you know Emacs won't be launched from your shell environment
+# (e.g. you're on macOS or use an app launcher that doesn't launch
+# programs with the correct shell) then create an envvar file to
+# ensure Doom correctly inherits your shell environment.
+doom env
+
+# Then synchronize Doom with your config:
+doom sync
+#+end_src
 
 * Fundamental setups
 ** Some good defaults
