@@ -63,14 +63,11 @@
 (package! jinx
   :recipe (:host github :repo "minad/jinx"))
 
-;; evil escape
-(package! key-chord
-  :recipe (:host github :repo "emacsorphanage/key-chord"
-           :files ("key-chord.el")))
-
 ;; org-mode related
 (package! org-modern
   :recipe (:host github :repo "minad/org-modern"))
+(package! org-modern-indent
+  :recipe (:host github :repo "jdtsmith/org-modern-indent"))
 
 (package! org-roam-ui
   :recipe (:host github :repo "org-roam/org-roam-ui"
@@ -117,3 +114,5 @@
 
 (package! cape-yasnippet
   :recipe (:host github :repo "elken/cape-yasnippet"))
+
+(unpin! lsp-mode)

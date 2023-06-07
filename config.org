@@ -15,7 +15,7 @@ packages in =packages.el= that are not pinned to any specific version.
 As such, there might be incompatibilities if one blindly copies codes
 from this configuration.
 
-Currently, I use [[https://github.com/d12frosted/homebrew-emacs-plus][emacs-plus]] =--with-native-compilation=
+Currently, I use [[https://github.com/d12frosted/homebrew-emacs-plus][emacs-plus]] =--with-native-compilation=.
 
 * Fundamental setups
 ** Some good defaults
@@ -31,6 +31,7 @@ Currently, I use [[https://github.com/d12frosted/homebrew-emacs-plus][emacs-plus
 ;; This determines the style of line numbers in effect. If set to `nil', line
 ;; numbers are disabled. For relative line numbers, set this to `relative'.
 (setq display-line-numbers-type t)
+(remove-hook! '(text-mode-hook) #'display-line-numbers-mode)
 #+end_src
 
 ** Font and theme
@@ -54,7 +55,8 @@ Currently, I use [[https://github.com/d12frosted/homebrew-emacs-plus][emacs-plus
 
 ** Dashboard
 We first change the default =DOOM= banner and insert a splash phrase.
-Here are two images in =misc/=, one is from [[https://github.com/darwinproject][Darwin Project]]
+Here are two images in =misc/=, one is from [[https://github.com/darwinproject][Darwin Project]], the other
+is a global map. You can also add whatever you like.
 #+begin_src emacs-lisp
 ;; (setq fancy-splash-image (concat doom-private-dir "misc/darwin.png"))
 (setq fancy-splash-image (concat doom-private-dir "misc/world.png"))
@@ -90,7 +92,7 @@ bind common actions to a single key.
         :desc "Find file" :ng "f" #'find-file
         :desc "Recent files" :ng "r" #'consult-recent-file
         :desc "Config dir" :ng "C" #'doom/open-private-config
-        :desc "Open config.el" :ng "c" (cmd! (find-file (expand-file-name "config.el" doom-user-dir)))
+        :desc "Open config.org" :ng "c" (cmd! (find-file (expand-file-name "config.org" doom-user-dir)))
         :desc "Notes (roam)" :ng "n" #'org-roam-node-find
         :desc "Bookmark" :ng "b" #'bookmark-jump
         :desc "Switch buffers (all)" :ng "B" #'consult-buffer
@@ -105,12 +107,14 @@ bind common actions to a single key.
 (add-hook! 'doom-init-ui-hook
            :append (+doom-dashboard-setup-modified-keymap))
 #+end_src
-Now that the dashboard is so convenient, I’ll want to make it easier to get to.
+Now that the dashboard is so convenient, I’ll want to make it
+easier to get to.
 #+begin_src emacs-lisp
 (map! :leader :desc "Dashboard" "d" #'+doom-dashboard/open)
 #+end_src
 
-At this point there are just a few minor tweaks I’d still like to make to the dashboard.
+At this point there are just a few minor tweaks I’d still like to
+make to the dashboard.
 #+begin_src emacs-lisp
 (defun +doom-dashboard-tweak (&optional _)
   (with-current-buffer (get-buffer +doom-dashboard-name)
@@ -125,4 +129,330 @@ At this point there are just a few minor tweaks I’d still like to make to the 
 (after! doom-modeline
   (setq doom-modeline-enable-word-count t)
   (setq doom-modeline-persp-icon t))
+#+end_src
+
+** Line Wrap
+On larger screens I like buffer contents to not exceed a certain
+width and are centered. =olivetti-mode= solves this problem nicely.
+There is also an =auto-olivetti-mode=  which automatically turns on
+=olivetti-mode= in most buffers.
+#+begin_src emacs-lisp
+(use-package! olivetti
+  :config
+  (setq-default olivetti-body-width 80)
+  (add-hook 'mixed-pitch-mode-hook
+            (lambda () (setq-local olivetti-body-width 70))))
+
+(use-package! auto-olivetti
+  :custom
+  (auto-olivetti-enabled-modes '(org-mode
+                                 text-mode
+                                 latex-mode
+                                 helpful-mode))
+  :config
+  (auto-olivetti-mode))
+#+end_src
+
+** Miscellaneous
+Fix the crashes of PDF-tool
+#+begin_src emacs-lisp
+(add-hook 'pdf-tools-enabled-hook 'pdf-view-dark-minor-mode)
+#+end_src
+
+* Editing configurations
+** Auto-completion
+*** Corfu
+This module is not yet in the official =DOOM= modules.
+I now use the developing PR in doom emacs for now.
+Will delete the custom module when the PR is merged.
+#+begin_src emacs-lisp
+(setq corfu-auto-delay 0.2)
+
+(use-package! corfu
+  :config
+  (defun corfu-enable-in-minibuffer ()
+    "Enable Corfu in the minibuffer if `completion-at-point' is bound."
+    (when (where-is-internal #'completion-at-point (list (current-local-map)))
+      ;; (setq-local corfu-auto nil) ;; Enable/disable auto completion
+      (setq-local corfu-echo-delay nil ;; Disable automatic echo and popup
+                  corfu-popupinfo-delay nil)
+      (corfu-mode 1)))
+  (add-hook 'minibuffer-setup-hook #'corfu-enable-in-minibuffer))
+
+(use-package! orderless
+  :config
+  (add-to-list 'orderless-matching-styles 'char-fold-to-regexp))
+#+end_src
+*** Yasnippet
+It's too sensitive, disabled for now.
+#+begin_src emacs-lisp
+;; (use-package! cape-yasnippet
+;;   :after (corfu yasnippet)
+;;   :init
+;;   (add-to-list 'completion-at-point-functions #'cape-yasnippet))
+#+end_src
+
+** Evil
+#+begin_src emacs-lisp
+(use-package! evil-escape
+  :config
+  (setq evil-esc-delay 0.25))
+#+end_src
+
+** Spell check
+#+begin_src emacs-lisp
+(use-package! jinx
+  :hook ((text-mode . jinx-mode)
+         (org-mode . jinx-mode)
+         (latex-mode . jinx-mode)
+         (markdown-mode . jinx-mode))
+  :bind ([remap ispell-word] . jinx-correct))
+
+(setq ispell-dictionary "en-custom")
+(setq ispell-personal-dictionary
+      (expand-file-name "misc/ispell_personal" doom-private-dir))
+#+end_src
+
+* Major modes and language-specific configurations
+** Org-mode
+I came to Emacs for coding, but eventually what kept me using it is
+Org-mode. In fact, I spend most of my time in an Org-mode buffer.
+It’s just that good.
+*** Visual-related configs
+**** Custom faces
+#+begin_src emacs-lisp
+(after! org
+  ;; Set some faces
+  (custom-set-faces!
+    `((org-quote)
+      :foreground ,(doom-color 'blue) :extend t)
+    `((org-document-title)
+      :foreground ,(face-attribute 'org-document-title :foreground)
+      :height 1.3 :extend t :weight bold)
+    `((org-level-1)
+      :foreground ,(face-attribute 'outline-1 :foreground)
+      :height 1.1 :weight bold)
+    `((org-level-2)
+      :foreground ,(face-attribute 'outline-2 :foreground)
+      :weight bold)
+    `((org-block-begin-line org-block-end-line)
+      :background ,(doom-color 'bg)))
+  ;; Change how LaTeX and image previews are shown
+  (setq org-highlight-latex-and-related '(native entities script)
+        org-image-actual-width (min (/ (display-pixel-width) 3) 800)))
+#+end_src
+**** Org-modern
+#+begin_src emacs-lisp
+(use-package! org-modern
+  :hook (
+         (org-modern-mode . my/org-modern-spacing)
+         (org-mode . org-modern-mode))
+  :config
+  (defun my/org-modern-spacing ()
+    (setq-local line-spacing
+                (if org-modern-mode
+                    0.1 0.1)))
+  (setq
+   ;; Edit settings
+   org-auto-align-tags nil
+   org-tags-column 0
+   org-catch-invisible-edits 'show-and-error
+   org-special-ctrl-a/e t
+   org-insert-heading-respect-content t
+   ;; Appearance
+   org-hide-emphasis-markers t
+   org-pretty-entities t
+   org-ellipsis "…"
+   ;; Agenda styling
+   org-agenda-tags-column 0
+   org-agenda-block-separator ?─
+   org-agenda-time-grid
+   '((daily today require-timed)
+     (800 1000 1200 1400 1600 1800 2000)
+     " ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄")
+   org-agenda-current-time-string
+   "⭠ now ─────────────────────────────────────────────────"))
+#+end_src
+
+=org-modern-indent= keeps the block styling in =org-modern= with
+=org-indent-mode=.
+#+begin_src emacs-lisp
+(after! org
+ (use-package! org-modern-indent
+  :config
+  (add-hook 'org-mode-hook #'org-modern-indent-mode 90)))
+#+end_src
+**** Org-appear
+#+begin_src emacs-lisp
+(use-package! org-appear
+  :hook
+  (org-mode . org-appear-mode)
+  :config
+  (setq org-appear-autoemphasis t
+        org-appear-autosubmarkers t
+        org-appear-autolinks nil)
+  ;; for proper first-time setup, `org-appear--set-elements'
+  ;; needs to be run after other hooks have acted.
+  (run-at-time nil nil #'org-appear--set-elements))
+#+end_src
+**** Org-LaTex-preview
+#+begin_src emacs-lisp
+(use-package! org-latex-preview
+  :after org
+  :hook ((org-mode . org-latex-preview-auto-mode))
+  :config
+  (pushnew! org-latex-preview--ignored-faces 'org-list-dt 'fixed-pitch)
+  (setq org-latex-preview-numbered     t
+        org-startup-with-latex-preview t
+        org-latex-preview-width 0.8
+        org-latex-preview-processing-indicator 'face
+        org-latex-preview-preamble
+        "\\documentclass{article}\n[DEFAULT-PACKAGES]\n[PACKAGES]
+         \\usepackage[dvipsnames,svgnames]{xcolor}
+         \\usepackage[sfdefault]{AlegreyaSans}
+         \\usepackage{newtxsf}"))
+(after! org-src
+  (add-to-list 'org-src-block-faces '("latex" (:inherit default :extend t))))
+#+end_src
+*** Org-roam related configs
+**** Org-roam
+#+begin_src emacs-lisp
+(setq org-directory "~/Zhen_WU/org/")
+
+(after! org
+  (after! org-roam
+    (setq org-roam-directory "~/Zhen_WU/org/org-roam/")
+    (add-hook 'after-init-hook 'org-roam-mode)
+    ;; org-roam-bibtex stuff
+    (use-package! org-roam-bibtex)
+    (org-roam-bibtex-mode)
+    (setq orb-preformat-keywords
+          '("citekey" "title" "url" "author-or-editor" "keywords" "file")
+          orb-process-file-keyword t
+          orb-attached-file-extensions '("pdf"))
+    ;; Function to capture quotes from pdf
+    (defun org-roam-capture-pdf-active-region ()
+      (let* ((pdf-buf-name (plist-get org-capture-plist :original-buffer))
+             (pdf-buf (get-buffer pdf-buf-name)))
+        (if (buffer-live-p pdf-buf)
+            (with-current-buffer pdf-buf
+              (car (pdf-view-active-region-text)))
+          (user-error "Buffer %S not alive" pdf-buf-name))))
+    ;; org-roam-ui
+    (use-package! org-roam-ui
+      :config
+      (setq org-roam-ui-sync-theme t
+            org-roam-ui-follow t
+            org-roam-ui-update-on-save t))
+
+    ;; Workaround for org-roam minibuffer issues
+    (defun my/org-roam-node-read--to-candidate (node template)
+      "Return a minibuffer completion candidate given NODE.
+  TEMPLATE is the processed template used to format the entry."
+      (let ((candidate-main (org-roam-node--format-entry
+                             template
+                             node
+                             (1- (frame-width)))))
+        (cons (propertize candidate-main 'node node) node)))
+    (advice-add 'org-roam-node-read--to-candidate
+                :override #'my/org-roam-node-read--to-candidate)))
+#+end_src
+**** Citar
+#+begin_src emacs-lisp
+(use-package! citar
+  :hook
+  (LaTeX-mode . citar-capf-setup)
+  (org-mode . citar-capf-setup)
+  :config
+  (setq! citar-bibliography '("~/Zhen_WU/org/org-roam/library.bib"))
+  (setq! citar-library-paths '("~/Zhen_WU/org/org-roam/files/")
+         citar-notes-paths '("~/Zhen_WU/org/org-roam/notes/")))
+
+(after! org-roam-bibtex
+  (use-package! citar-org-roam
+    :config
+    (citar-register-notes-source
+     'orb-citar-source (list :name "Org-Roam Notes"
+                             :category 'org-roam-node
+                             :items #'citar-org-roam--get-candidates
+                             :hasitems #'citar-org-roam-has-notes
+                             :open #'citar-org-roam-open-note
+                             :create #'orb-citar-edit-note
+                             :annotate #'citar-org-roam--annotate))
+    (setq citar-notes-source 'orb-citar-source)
+    (setq citar-org-roam-subdir "~/Zhen_WU/org/org-roam/notes/")
+    (citar-org-roam-mode)
+    (setq org-roam-capture-templates
+          '(("d" "default" plain
+             "%?"
+             :target
+             (file+head
+              "%<%Y%m%d%H%M%S>-${slug}.org"
+              "#+title: ${note-title}\n")
+             :unnarrowed t)
+            ("n" "literature note" plain
+             "%?"
+             :target
+             (file+head
+              "%(expand-file-name (or citar-org-roam-subdir \"\")
+                 org-roam-directory)/${citekey}.org"
+              "#+title: ${citekey} . ${note-title}.\n
+               ,#+created: %U\n
+               ,#+last_modified: %U\n\n")
+             :unnarrowed t)))
+    (setq citar-org-roam-capture-template-key "n")))
+#+end_src
+**** Org-noter
+#+begin_src emacs-lisp
+(after! org
+  (after! org-noter
+    (setq org-noter-hide-other nil
+          org-noter-notes-search-path '("~/Zhen_WU/org/org-roam/notes/")
+          org-noter-separate-notes-from-heading t
+          org-noter-always-create-frame t)
+    (map!
+     :after org-noter
+     :map org-noter-notes-mode-map
+     :desc "Insert note"
+     "C-M-i" #'org-noter-insert-note
+     :desc "Insert precise note"
+     "C-M-p" #'org-noter-insert-precise-note
+     :desc "Go to previous note"
+     "C-M-k" #'org-noter-sync-prev-note
+     :desc "Go to next note"
+     "C-M-j" #'org-noter-sync-next-note
+     :desc "Create skeleton"
+     "C-M-s" #'org-noter-create-skeleton
+     :desc "Kill session"
+     "C-M-q" #'org-noter-kill-session)
+    (map!
+     :after org-noter
+     :map org-noter-doc-mode-map
+     :desc "Insert note"
+     "C-M-i" #'org-noter-insert-note
+     :desc "Insert precise note"
+     "C-M-p" #'org-noter-insert-precise-note
+     :desc "Go to previous note"
+     "C-M-k" #'org-noter-sync-prev-note
+     :desc "Go to next note"
+     "C-M-j" #'org-noter-sync-next-note
+     :desc "Create skeleton"
+     "C-M-s" #'org-noter-create-skeleton
+     :desc "Kill session"
+     "C-M-q" #'org-noter-kill-session)))
+#+end_src
+*** Org-babel
+**** Jupyter-Julia
+#+begin_src emacs-lisp
+(after! org
+  (require 'jupyter)
+  (require 'ob-jupyter)
+  (add-to-list 'org-babel-load-languages '(jupyter . t))
+  (setq org-babel-default-header-args:jupyter-julia
+        '((:session . "julia")
+          (:kernel  . "julia-1.9")
+          (:async   . "no")
+          (:results . "value")
+          (:exports . "both")
+          (:output  . "both"))))
 #+end_src
