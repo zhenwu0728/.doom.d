@@ -1,0 +1,128 @@
+#+title: My Doom Emacs Configuration
+#+date: {{{modification-time(%Y-%m-%d)}}}
+
+* Introduction
+This document describes how I set up my Emacs, in [[https://en.wikipedia.org/wiki/Literate_programming][literate programming]]
+style, using a plain text format closely related to Emacs called
+[[https://orgmode.org/][Org-mode]]. This Emacs configuration is based on a configuration framework
+called [[https://github.com/doomemacs/][Doom Emacs]], hence the name of this document.
+
+* Before using this configuration
+This configuration is continuously being improved. I build my own
+Emacs from source in order to take advantage of some experimental
+features. There are also =(packages! ...)=  calls to external Emacs
+packages in =packages.el= that are not pinned to any specific version.
+As such, there might be incompatibilities if one blindly copies codes
+from this configuration.
+
+Currently, I use [[https://github.com/d12frosted/homebrew-emacs-plus][emacs-plus]] =--with-native-compilation=
+
+* Fundamental setups
+** Some good defaults
+#+begin_src emacs-lisp
+;; Some functionality uses this to identify you, e.g. GPG configuration, email
+;; clients, file templates and snippets. It is optional.
+(setq user-full-name "Zhen Wu"
+      user-mail-address "zhenwu@mit.edu")
+
+;; emacs start with window maximized
+(add-hook 'window-setup-hook #'toggle-frame-maximized)
+
+;; This determines the style of line numbers in effect. If set to `nil', line
+;; numbers are disabled. For relative line numbers, set this to `relative'.
+(setq display-line-numbers-type t)
+#+end_src
+
+** Font and theme
+#+begin_src emacs-lisp
+(setq doom-font (font-spec :family "Iosevka"
+                           :size 18 :weight 'normal
+                           :width 'expanded)
+      doom-big-font (font-spec :family "Iosevka Slab"
+                               :size 18 :weight 'normal
+                               :width 'expanded))
+
+;; Day and night themes
+(defun my/apply-theme (appearance)
+  "Load theme, taking current system APPEARANCE into consideration."
+  (mapc #'disable-theme custom-enabled-themes)
+  (pcase appearance
+    ('light (load-theme 'doom-one-light t))
+    ('dark (load-theme 'doom-palenight t))))
+(add-hook 'ns-system-appearance-change-functions #'my/apply-theme)
+#+end_src
+
+** Dashboard
+We first change the default =DOOM= banner and insert a splash phrase.
+Here are two images in =misc/=, one is from [[https://github.com/darwinproject][Darwin Project]]
+#+begin_src emacs-lisp
+;; (setq fancy-splash-image (concat doom-private-dir "misc/darwin.png"))
+(setq fancy-splash-image (concat doom-private-dir "misc/world.png"))
+(defun splash-phrase-dashboard-insert ()
+  "Insert the splash phrase surrounded by newlines."
+  (insert "\n" (+doom-dashboard--center
+                +doom-dashboard--width
+                "Enjoy Modeling & Writing")))
+(defun +doom-dashboard-benchmark-line ()
+  "Insert the load time line."
+  (when doom-init-time
+    (insert
+     "\n\n"
+     (propertize
+      (+doom-dashboard--center
+       +doom-dashboard--width
+       (doom-display-benchmark-h 'return))
+      'face 'doom-dashboard-loaded))))
+(setq +doom-dashboard-functions
+      (list #'doom-dashboard-widget-banner
+            #'splash-phrase-dashboard-insert
+            #'+doom-dashboard-benchmark-line))
+#+end_src
+
+When using the dashboard, there are often a small number of
+actions I will take. As the dashboard is it’s own major mode,
+there is no need to use unnecessary keystrokes — we can simply
+bind common actions to a single key.
+#+begin_src emacs-lisp
+(defun +doom-dashboard-setup-modified-keymap ()
+  (setq +doom-dashboard-mode-map (make-sparse-keymap))
+  (map! :map +doom-dashboard-mode-map
+        :desc "Find file" :ng "f" #'find-file
+        :desc "Recent files" :ng "r" #'consult-recent-file
+        :desc "Config dir" :ng "C" #'doom/open-private-config
+        :desc "Open config.el" :ng "c" (cmd! (find-file (expand-file-name "config.el" doom-user-dir)))
+        :desc "Notes (roam)" :ng "n" #'org-roam-node-find
+        :desc "Bookmark" :ng "b" #'bookmark-jump
+        :desc "Switch buffers (all)" :ng "B" #'consult-buffer
+        :desc "IBuffer" :ng "i" #'ibuffer
+        :desc "Previous buffer" :ng "p" #'previous-buffer
+        :desc "Quit" :ng "Q" #'save-buffers-kill-terminal
+        :desc "Show keybindings" :ng "h" (cmd! (which-key-show-keymap '+doom-dashboard-mode-map))))
+(add-transient-hook! #'+doom-dashboard-mode
+  (+doom-dashboard-setup-modified-keymap))
+(add-transient-hook! #'+doom-dashboard-mode :append
+                     (+doom-dashboard-setup-modified-keymap))
+(add-hook! 'doom-init-ui-hook
+           :append (+doom-dashboard-setup-modified-keymap))
+#+end_src
+Now that the dashboard is so convenient, I’ll want to make it easier to get to.
+#+begin_src emacs-lisp
+(map! :leader :desc "Dashboard" "d" #'+doom-dashboard/open)
+#+end_src
+
+At this point there are just a few minor tweaks I’d still like to make to the dashboard.
+#+begin_src emacs-lisp
+(defun +doom-dashboard-tweak (&optional _)
+  (with-current-buffer (get-buffer +doom-dashboard-name)
+    (setq-local line-spacing 0.3
+                mode-line-format nil
+                evil-normal-state-cursor (list nil))))
+(add-hook '+doom-dashboard-mode-hook #'+doom-dashboard-tweak)
+#+end_src
+
+** Modeline
+#+begin_src emacs-lisp
+(after! doom-modeline
+  (setq doom-modeline-enable-word-count t)
+  (setq doom-modeline-persp-icon t))
+#+end_src
