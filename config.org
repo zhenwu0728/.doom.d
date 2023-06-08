@@ -45,7 +45,7 @@ doom sync
 
 * Fundamental setups
 ** Some good defaults
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle yes
 ;; Some functionality uses this to identify you, e.g. GPG configuration, email
 ;; clients, file templates and snippets. It is optional.
 (setq user-full-name "Zhen Wu"
@@ -61,15 +61,17 @@ doom sync
 #+end_src
 
 ** Font and theme
-#+begin_src emacs-lisp
-(setq doom-font (font-spec :family "Iosevka"
-                           :size 18 :weight 'normal
-                           :width 'expanded)
-      doom-big-font (font-spec :family "Iosevka Slab"
-                               :size 18 :weight 'normal
-                               :width 'expanded))
-
-;; Day and night themes
+*** Font
+#+begin_src emacs-lisp :tangle yes
+(setq doom-font (font-spec :family "Iosevka" :size 18
+                           :weight 'normal :width 'expanded)
+      doom-big-font (font-spec :family "Iosevka Slab" :size 18
+                               :weight 'normal :width 'expanded))
+#+end_src
+*** Theme
+The theme will change according to system appearance, like
+light theme in the day and dark theme in the night.
+#+begin_src emacs-lisp :tangle yes
 (defun my/apply-theme (appearance)
   "Load theme, taking current system APPEARANCE into consideration."
   (mapc #'disable-theme custom-enabled-themes)
@@ -77,15 +79,16 @@ doom sync
     ('light (load-theme 'doom-one-light t))
     ('dark (load-theme 'doom-palenight t))))
 (add-hook 'ns-system-appearance-change-functions #'my/apply-theme)
+
 #+end_src
 
 ** Dashboard
 We first change the default =DOOM= banner and insert a splash phrase.
 Here are two images in =misc/=, one is from [[https://github.com/darwinproject][Darwin Project]], the other
 is a global map. You can also add whatever you like.
-#+begin_src emacs-lisp
-;; (setq fancy-splash-image (concat doom-private-dir "misc/darwin.png"))
-(setq fancy-splash-image (concat doom-private-dir "misc/world.png"))
+#+begin_src emacs-lisp :tangle yes
+(setq fancy-splash-image (concat doom-private-dir "misc/darwin.png"))
+;; (setq fancy-splash-image (concat doom-private-dir "misc/world.png"))
 (defun splash-phrase-dashboard-insert ()
   "Insert the splash phrase surrounded by newlines."
   (insert "\n" (+doom-dashboard--center
@@ -111,7 +114,7 @@ When using the dashboard, there are often a small number of
 actions I will take. As the dashboard is it’s own major mode,
 there is no need to use unnecessary keystrokes — we can simply
 bind common actions to a single key.
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle yes
 (defun +doom-dashboard-setup-modified-keymap ()
   (setq +doom-dashboard-mode-map (make-sparse-keymap))
   (map! :map +doom-dashboard-mode-map
@@ -135,13 +138,13 @@ bind common actions to a single key.
 #+end_src
 Now that the dashboard is so convenient, I’ll want to make it
 easier to get to.
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle yes
 (map! :leader :desc "Dashboard" "d" #'+doom-dashboard/open)
 #+end_src
 
 At this point there are just a few minor tweaks I’d still like to
 make to the dashboard.
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle yes
 (defun +doom-dashboard-tweak (&optional _)
   (with-current-buffer (get-buffer +doom-dashboard-name)
     (setq-local line-spacing 0.3
@@ -151,7 +154,7 @@ make to the dashboard.
 #+end_src
 
 ** Modeline
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle yes
 (after! doom-modeline
   (setq doom-modeline-enable-word-count t)
   (setq doom-modeline-persp-icon t))
@@ -162,7 +165,7 @@ On larger screens I like buffer contents to not exceed a certain
 width and are centered. =olivetti-mode= solves this problem nicely.
 There is also an =auto-olivetti-mode=  which automatically turns on
 =olivetti-mode= in most buffers.
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle yes
 (use-package! olivetti
   :config
   (setq-default olivetti-body-width 80)
@@ -181,7 +184,7 @@ There is also an =auto-olivetti-mode=  which automatically turns on
 
 ** Miscellaneous
 Fix the crashes of PDF-tool
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle yes
 (add-hook 'pdf-tools-enabled-hook 'pdf-view-dark-minor-mode)
 #+end_src
 
@@ -191,7 +194,7 @@ Fix the crashes of PDF-tool
 This module is not yet in the official =DOOM= modules.
 I now use the developing PR in doom emacs for now.
 Will delete the custom module when the PR is merged.
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle yes
 (setq corfu-auto-delay 0.2)
 
 (use-package! corfu
@@ -211,7 +214,7 @@ Will delete the custom module when the PR is merged.
 #+end_src
 *** Yasnippet
 It's too sensitive, disabled for now.
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle yes
 ;; (use-package! cape-yasnippet
 ;;   :after (corfu yasnippet)
 ;;   :init
@@ -219,14 +222,20 @@ It's too sensitive, disabled for now.
 #+end_src
 
 ** Evil
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle yes
 (use-package! evil-escape
   :config
   (setq evil-esc-delay 0.25))
 #+end_src
+#+begin_src emacs-lisp :tangle yes
+(after! evil
+  (evil-global-set-key 'motion "j" 'evil-next-visual-line)
+  (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
+  (setq evil-snipe-spillover-scope 'visible))
+#+end_src
 
 ** Spell check
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle yes
 (use-package! jinx
   :hook ((text-mode . jinx-mode)
          (org-mode . jinx-mode)
@@ -246,7 +255,7 @@ Org-mode. In fact, I spend most of my time in an Org-mode buffer.
 It’s just that good.
 *** Visual-related configs
 **** Custom faces
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle yes
 (after! org
   ;; Set some faces
   (custom-set-faces!
@@ -268,7 +277,7 @@ It’s just that good.
         org-image-actual-width (min (/ (display-pixel-width) 3) 800)))
 #+end_src
 **** Org-modern
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle yes
 (use-package! org-modern
   :hook (
          (org-modern-mode . my/org-modern-spacing)
@@ -302,14 +311,14 @@ It’s just that good.
 
 =org-modern-indent= keeps the block styling in =org-modern= with
 =org-indent-mode=.
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle yes
 (after! org
- (use-package! org-modern-indent
-  :config
-  (add-hook 'org-mode-hook #'org-modern-indent-mode 90)))
+  (use-package! org-modern-indent
+    :config
+    (add-hook 'org-mode-hook #'org-modern-indent-mode 90)))
 #+end_src
 **** Org-appear
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle yes
 (use-package! org-appear
   :hook
   (org-mode . org-appear-mode)
@@ -322,7 +331,7 @@ It’s just that good.
   (run-at-time nil nil #'org-appear--set-elements))
 #+end_src
 **** Org-LaTex-preview
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle yes
 (use-package! org-latex-preview
   :after org
   :hook ((org-mode . org-latex-preview-auto-mode))
@@ -342,7 +351,7 @@ It’s just that good.
 #+end_src
 *** Org-roam related configs
 **** Org-roam
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle yes
 (setq org-directory "~/Zhen_WU/org/")
 
 (after! org
@@ -384,7 +393,7 @@ It’s just that good.
                 :override #'my/org-roam-node-read--to-candidate)))
 #+end_src
 **** Citar
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle yes
 (use-package! citar
   :hook
   (LaTeX-mode . citar-capf-setup)
@@ -429,7 +438,7 @@ It’s just that good.
     (setq citar-org-roam-capture-template-key "n")))
 #+end_src
 **** Org-noter
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle yes
 (after! org
   (after! org-noter
     (setq org-noter-hide-other nil
@@ -469,7 +478,7 @@ It’s just that good.
 #+end_src
 *** Org-babel
 **** Jupyter-Julia
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle yes
 (after! org
   (require 'jupyter)
   (require 'ob-jupyter)
