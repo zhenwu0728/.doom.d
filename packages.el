@@ -56,8 +56,7 @@
   :recipe (:host sourcehut :repo "ashton314/auto-olivetti"))
 
 ;; Julia babal
-(package! jupyter
-  :recipe (:host github :repo "emacs-jupyter/jupyter"))
+;; (unpin! jupyter)
 
 ;; spell check and languagetool
 (package! jinx

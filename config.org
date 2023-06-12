@@ -480,13 +480,9 @@ It’s just that good.
 **** Jupyter-Julia
 #+begin_src emacs-lisp :tangle yes
 (after! org
-  (require 'jupyter)
-  (require 'ob-jupyter)
-  (add-to-list 'org-babel-load-languages '(jupyter . t))
   (setq org-babel-default-header-args:jupyter-julia
         '((:session . "julia")
           (:kernel  . "julia-1.9")
-          (:async   . "no")
           (:results . "value")
           (:exports . "both")
           (:output  . "both"))))
