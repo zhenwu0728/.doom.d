@@ -55,9 +55,6 @@
 (package! auto-olivetti
   :recipe (:host sourcehut :repo "ashton314/auto-olivetti"))
 
-;; Julia babal
-;; (unpin! jupyter)
-
 ;; spell check and languagetool
 (package! jinx
   :recipe (:host github :repo "minad/jinx"))
@@ -111,7 +108,8 @@
   :recipe (:host github :repo "emacsmirror/org-contrib"
            :files ("lisp/*.el")))
 
-(package! cape-yasnippet
-  :recipe (:host github :repo "elken/cape-yasnippet"))
-
 (unpin! lsp-mode)
+
+(unpin! evil-collection)
+
+(unpin! company)

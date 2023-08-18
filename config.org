@@ -53,6 +53,7 @@ doom sync
 
 ;; emacs start with window maximized
 (add-hook 'window-setup-hook #'toggle-frame-maximized)
+(add-to-list 'default-frame-alist '(undecorated-round . t))
 
 ;; This determines the style of line numbers in effect. If set to `nil', line
 ;; numbers are disabled. For relative line numbers, set this to `relative'.
@@ -192,33 +193,52 @@ Fix the crashes of PDF-tool
 ** Auto-completion
 *** Corfu
 This module is not yet in the official =DOOM= modules.
-I now use the developing PR in doom emacs for now.
-Will delete the custom module when the PR is merged.
+I've tested the developing PR in doom emacs for a while.
+Current switched back to =company=.
 #+begin_src emacs-lisp :tangle yes
-(setq corfu-auto-delay 0.2)
+;; (setq corfu-auto-delay 0.2)
 
-(use-package! corfu
-  :config
-  (defun corfu-enable-in-minibuffer ()
-    "Enable Corfu in the minibuffer if `completion-at-point' is bound."
-    (when (where-is-internal #'completion-at-point (list (current-local-map)))
-      ;; (setq-local corfu-auto nil) ;; Enable/disable auto completion
-      (setq-local corfu-echo-delay nil ;; Disable automatic echo and popup
-                  corfu-popupinfo-delay nil)
-      (corfu-mode 1)))
-  (add-hook 'minibuffer-setup-hook #'corfu-enable-in-minibuffer))
+;; (use-package! corfu
+;;   :config
+;;   (defun corfu-enable-in-minibuffer ()
+;;     "Enable Corfu in the minibuffer if `completion-at-point' is bound."
+;;     (when (where-is-internal #'completion-at-point (list (current-local-map)))
+;;       ;; (setq-local corfu-auto nil) ;; Enable/disable auto completion
+;;       (setq-local corfu-echo-delay nil ;; Disable automatic echo and popup
+;;                   corfu-popupinfo-delay nil)
+;;       (corfu-mode 1)))
+;;   (add-hook 'minibuffer-setup-hook #'corfu-enable-in-minibuffer))
 
-(use-package! orderless
-  :config
-  (add-to-list 'orderless-matching-styles 'char-fold-to-regexp))
+;; (use-package! orderless
+;;   :config
+;;   (add-to-list 'orderless-matching-styles 'char-fold-to-regexp))
 #+end_src
-*** Yasnippet
-It's too sensitive, disabled for now.
+*** Cape
 #+begin_src emacs-lisp :tangle yes
-;; (use-package! cape-yasnippet
-;;   :after (corfu yasnippet)
+;; (use-package! cape
+;;   :after (corfu)
 ;;   :init
-;;   (add-to-list 'completion-at-point-functions #'cape-yasnippet))
+;;   (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+;;   (add-to-list 'completion-at-point-functions #'cape-keyword)
+
+;;   (add-hook 'prog-mode-hook
+;;             (lambda ()
+;;               (add-to-list 'completion-at-point-functions #'cape-file)))
+;;   (add-hook! '(org-mode-hook markdown-mode-hook text-mode-hook)
+;;             (lambda ()
+;;               (add-to-list 'completion-at-point-functions #'cape-dict)))
+;;   (defalias 'corfu--dict-in-comment
+;;     (cape-capf-inside-comment #'cape-dict))
+;;   (add-hook 'prog-mode-hook
+;;             (lambda ()
+;;               (add-to-list 'completion-at-point-functions
+;;                            #'corfu--dict-in-comment)))
+;;   (defalias 'corfu--dict-in-string
+;;     (cape-capf-inside-string #'cape-dict))
+;;   (add-hook 'prog-mode-hook
+;;             (lambda ()
+;;               (add-to-list 'completion-at-point-functions
+;;                            #'corfu--dict-in-string))))
 #+end_src
 
 ** Evil
@@ -298,15 +318,15 @@ It’s just that good.
    org-hide-emphasis-markers t
    org-pretty-entities t
    org-ellipsis "…"
-   ;; Agenda styling
-   org-agenda-tags-column 0
-   org-agenda-block-separator ?─
-   org-agenda-time-grid
-   '((daily today require-timed)
-     (800 1000 1200 1400 1600 1800 2000)
-     " ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄")
-   org-agenda-current-time-string
-   "⭠ now ─────────────────────────────────────────────────"))
+   org-modern-list '((43 . "•")
+                     (45 . "–")
+                     (42 . "↪")))
+  (custom-set-faces!
+    `((org-modern-tag)
+      :background ,(doom-blend (doom-color 'blue) (doom-color 'bg) 0.1)
+      :foreground ,(doom-color 'grey))
+    `((org-modern-radio-target org-modern-internal-target)
+      :inherit 'default :foreground ,(doom-color 'blue))))
 #+end_src
 
 =org-modern-indent= keeps the block styling in =org-modern= with
@@ -341,11 +361,25 @@ It’s just that good.
         org-startup-with-latex-preview t
         org-latex-preview-width 0.8
         org-latex-preview-processing-indicator 'face
+        ;;live previewing
+        org-latex-preview-live-preview-fragments t
+        org-latex-preview-auto-generate 'live
+        org-latex-preview-debounce 0.5
+        org-latex-preview-throttle 0.2
+        ;;previewing preamble
         org-latex-preview-preamble
         "\\documentclass{article}\n[DEFAULT-PACKAGES]\n[PACKAGES]
          \\usepackage[dvipsnames,svgnames]{xcolor}
          \\usepackage[sfdefault]{AlegreyaSans}
-         \\usepackage{newtxsf}"))
+         \\usepackage{newtxsf}
+         \\definecolor{DarkRed}{RGB}{204,36,29}
+         \\definecolor{ForestGreen}{RGB}{184,187,38}
+         \\definecolor{red}{RGB}{251,73,52}
+         \\definecolor{orange}{RGB}{254,128,25}
+         \\definecolor{blue}{RGB}{69,133,136}
+         \\definecolor{green}{RGB}{184,187,38}
+         \\definecolor{yellow}{RGB}{250, 189, 47}
+         \\definecolor{purple}{RGB}{211, 134, 155}"))
 (after! org-src
   (add-to-list 'org-src-block-faces '("latex" (:inherit default :extend t))))
 #+end_src
